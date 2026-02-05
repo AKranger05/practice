@@ -6,25 +6,64 @@ import { ShopHeader } from "@/components/shop-header"
 import { HeroSection } from "@/components/hero-section"
 import { StickerWall } from "@/components/sticker-wall"
 import { CartPanel } from "@/components/cart-panel"
+import { ReceiverDetailsPanel } from "@/components/receiver-details-panel"
+import { PaymentPanel } from "@/components/payment-panel"
 import { HistoryPanel } from "@/components/history-panel"
 import { FloatingCartButton } from "@/components/floating-cart-button"
 import { CheckCircle } from "lucide-react"
 
 type View = "hero" | "wall"
+type CheckoutStep = "cart" | "receiver-details" | "payment"
+
+interface ReceiverDetails {
+  whatsappNumber: string
+  email: string
+  message: string
+}
 
 function StickerShopContent() {
   const [view, setView] = useState<View>("hero")
+  const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>("cart")
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [showCheckoutSuccess, setShowCheckoutSuccess] = useState(false)
+  const [receiverDetails, setReceiverDetails] = useState<ReceiverDetails | null>(null)
   
   const { checkout } = useStickerContext()
 
-  const handleCheckout = () => {
+  const handleCartCheckout = () => {
+    // Move from cart to receiver details
+    setCheckoutStep("receiver-details")
+  }
+
+  const handleReceiverDetailsSubmit = (details: ReceiverDetails) => {
+    // Save receiver details and move to payment
+    setReceiverDetails(details)
+    setCheckoutStep("payment")
+  }
+
+  const handlePaymentSuccess = () => {
+    // Complete checkout, clear cart, show success
     checkout()
+    setCheckoutStep("cart")
     setIsCartOpen(false)
+    setReceiverDetails(null)
     setShowCheckoutSuccess(true)
     setTimeout(() => setShowCheckoutSuccess(false), 3000)
+  }
+
+  const handleCloseCheckout = () => {
+    setIsCartOpen(false)
+    setCheckoutStep("cart")
+    setReceiverDetails(null)
+  }
+
+  const handleBackToCart = () => {
+    setCheckoutStep("cart")
+  }
+
+  const handleBackToReceiverDetails = () => {
+    setCheckoutStep("receiver-details")
   }
 
   return (
@@ -45,12 +84,35 @@ function StickerShopContent() {
       {/* Floating Cart Button - only shows when items in cart */}
       <FloatingCartButton onClick={() => setIsCartOpen(true)} />
 
-      {/* Cart Panel */}
-      <CartPanel
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        onCheckout={handleCheckout}
-      />
+      {/* Cart Panel - Step 1 */}
+      {checkoutStep === "cart" && (
+        <CartPanel
+          isOpen={isCartOpen}
+          onClose={handleCloseCheckout}
+          onCheckout={handleCartCheckout}
+        />
+      )}
+
+      {/* Receiver Details Panel - Step 2 */}
+      {checkoutStep === "receiver-details" && (
+        <ReceiverDetailsPanel
+          isOpen={isCartOpen}
+          onClose={handleCloseCheckout}
+          onBack={handleBackToCart}
+          onProceedToPayment={handleReceiverDetailsSubmit}
+        />
+      )}
+
+      {/* Payment Panel - Step 3 */}
+      {checkoutStep === "payment" && receiverDetails && (
+        <PaymentPanel
+          isOpen={isCartOpen}
+          onClose={handleCloseCheckout}
+          onBack={handleBackToReceiverDetails}
+          receiverDetails={receiverDetails}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
 
       {/* History Panel */}
       <HistoryPanel
@@ -65,7 +127,7 @@ function StickerShopContent() {
             <CheckCircle className="w-6 h-6" />
             <div>
               <p className="font-semibold">Order Placed Successfully!</p>
-              <p className="text-sm opacity-90">Check your history for details</p>
+              <p className="text-sm opacity-90">Stickers will be sent to the receiver</p>
             </div>
           </div>
         </div>

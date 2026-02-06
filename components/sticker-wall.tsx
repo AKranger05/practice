@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { stickers, categories } from "@/lib/sticker-data"
 import { StickerItem } from "./sticker-item"
 import { SearchBar } from "./search-bar"
@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils"
 
 interface StickerWallProps {
   onBack: () => void
+  shouldFocusSearch?: boolean
+  onSearchFocused?: () => void
 }
 
 // Category color schemes
@@ -40,12 +42,24 @@ const categoryColors: Record<string, { bg: string; text: string; btnBg: string; 
   },
 }
 
-export function StickerWall({ onBack }: StickerWallProps) {
+export function StickerWall({ onBack, shouldFocusSearch = false, onSearchFocused }: StickerWallProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   
-  // Refs for scrolling to categories
+  // Refs for scrolling to categories and auto-focus
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Auto-focus search when coming from trending page search click
+  useEffect(() => {
+    if (shouldFocusSearch && searchInputRef.current) {
+      // Small delay to ensure the component is fully rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+        onSearchFocused?.()
+      }, 100)
+    }
+  }, [shouldFocusSearch, onSearchFocused])
 
   // Filter stickers based on search query
   const filteredStickers = stickers.filter((sticker) => {
@@ -98,9 +112,13 @@ export function StickerWall({ onBack }: StickerWallProps) {
           </div>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar with ref for auto-focus */}
         <div className="mb-6">
-          <SearchBar onSearch={setSearchQuery} placeholder="Search all stickers or categories..." />
+          <SearchBar 
+            onSearch={setSearchQuery} 
+            placeholder="Search all stickers or categories..."
+            inputRef={searchInputRef}
+          />
         </div>
 
         {/* Category Quick Jump Buttons - Sticky */}

@@ -23,6 +23,7 @@ interface ReceiverDetails {
 
 function StickerShopContent() {
   const [view, setView] = useState<View>("hero")
+  const [shouldFocusSearch, setShouldFocusSearch] = useState(false)
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>("cart")
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
@@ -66,6 +67,18 @@ function StickerShopContent() {
     setCheckoutStep("receiver-details")
   }
 
+  // Handle view all - with auto-focus option
+  const handleViewAll = (autoFocusSearch = false) => {
+    setView("wall")
+    setShouldFocusSearch(autoFocusSearch)
+  }
+
+  // Handle back to hero
+  const handleBackToHero = () => {
+    setView("hero")
+    setShouldFocusSearch(false)
+  }
+
   return (
     <div className="min-h-screen pattern-bg">
       <ShopHeader
@@ -75,9 +88,13 @@ function StickerShopContent() {
 
       <main>
         {view === "hero" ? (
-          <HeroSection onViewAll={() => setView("wall")} />
+          <HeroSection onViewAll={handleViewAll} />
         ) : (
-          <StickerWall onBack={() => setView("hero")} />
+          <StickerWall 
+            onBack={handleBackToHero} 
+            shouldFocusSearch={shouldFocusSearch}
+            onSearchFocused={() => setShouldFocusSearch(false)}
+          />
         )}
       </main>
 

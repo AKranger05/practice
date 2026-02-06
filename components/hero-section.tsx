@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Sparkles, Search } from "lucide-react"
 
 interface HeroSectionProps {
-  onViewAll: () => void
+  onViewAll: (autoFocusSearch?: boolean) => void
 }
 
 export function HeroSection({ onViewAll }: HeroSectionProps) {
-  // Clicking search bar takes user directly to View All page where they can search
+  // Clicking search bar takes user to View All page with auto-focus on search
   const handleSearchClick = () => {
-    onViewAll()
+    onViewAll(true) // Pass true to auto-focus search bar
   }
 
   return (
@@ -31,7 +31,7 @@ export function HeroSection({ onViewAll }: HeroSectionProps) {
           Select your favorite Indian sweet stickers - Premium quality at Rs.3 each!
         </p>
 
-        {/* Search Bar - Clicking navigates to View All */}
+        {/* Search Bar - Clicking navigates to View All with auto-focus */}
         <div className="mb-8">
           <button
             type="button"
@@ -88,7 +88,7 @@ export function HeroSection({ onViewAll }: HeroSectionProps) {
         {/* View All Button - z-index 0 so floating cart (z-5) appears above it */}
         <div className="flex justify-center relative z-0 mb-24">
           <Button
-            onClick={onViewAll}
+            onClick={() => onViewAll(false)}
             className="bg-plum-noir hover:bg-plum-noir/90 text-white px-10 py-6 text-lg rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all"
           >
             View All Stickers

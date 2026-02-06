@@ -85,8 +85,8 @@ export function HeroSection({ onViewAll }: HeroSectionProps) {
           </div>
         </div>
 
-        {/* View All Button - With extra margin for scroll space */}
-        <div className="flex justify-center relative z-10 mb-24">
+        {/* View All Button - z-index 0 so floating cart (z-5) appears above it */}
+        <div className="flex justify-center relative z-0 mb-24">
           <Button
             onClick={onViewAll}
             className="bg-plum-noir hover:bg-plum-noir/90 text-white px-10 py-6 text-lg rounded-xl font-semibold shadow-xl hover:shadow-2xl transition-all"

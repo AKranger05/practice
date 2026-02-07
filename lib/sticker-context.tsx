@@ -41,26 +41,34 @@ const StickerContext = createContext<StickerContextType | undefined>(undefined)
 const MOCK_HISTORY: HistoryItem[] = [
   {
     id: "hist-1",
-    sticker: { id: "jalebi", name: "Jalebi", price: 25, category: "syrup-based", emoji: "🥨" },
+    sticker: { id: "jalebi", name: "Jalebi", price: 3, category: "syrup-based", emoji: "🥨" },
     quantity: 2,
     type: "sent",
     date: new Date(Date.now() - 86400000 * 2),
   },
   {
     id: "hist-2",
-    sticker: { id: "kaju-katli", name: "Kaju Katli", price: 45, category: "festive-favorites", emoji: "💎" },
+    sticker: { id: "kaju-katli", name: "Kaju Katli", price: 3, category: "festive-favorites", emoji: "💎" },
     quantity: 1,
     type: "received",
     date: new Date(Date.now() - 86400000),
   },
   {
     id: "hist-3",
-    sticker: { id: "rasmalai", name: "Rasmalai", price: 35, category: "milk-based", emoji: "🥛" },
+    sticker: { id: "rasmalai", name: "Rasmalai", price: 3, category: "milk-based", emoji: "🥛" },
     quantity: 3,
     type: "sent",
     date: new Date(Date.now() - 86400000 * 5),
   },
 ]
+
+// Counter to ensure unique IDs even when created at the same millisecond
+let historyIdCounter = 0
+
+function generateUniqueHistoryId(): string {
+  historyIdCounter++
+  return `hist-${Date.now()}-${historyIdCounter}`
+}
 
 export function StickerProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([])
@@ -111,7 +119,7 @@ export function StickerProvider({ children }: { children: ReactNode }) {
     setHistory((prev) => [
       {
         ...item,
-        id: `hist-${Date.now()}`,
+        id: generateUniqueHistoryId(), // ✅ Fixed: Now uses unique ID generator
         date: new Date(),
       },
       ...prev,

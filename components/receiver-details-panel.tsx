@@ -5,10 +5,12 @@ import { useStickerContext } from "@/lib/sticker-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { X, ArrowLeft, MessageSquare, Mail, Phone } from "lucide-react"
+import { X, ArrowLeft, MessageSquare, Mail, Phone, User } from "lucide-react"
 import { Label } from "@/components/ui/label"
 
 interface ReceiverDetailsFormData {
+  senderName: string
+  receiverName: string
   whatsappNumber: string
   email: string
   message: string
@@ -30,6 +32,8 @@ export function ReceiverDetailsPanel({
   const { getTotalPrice, getTotalItems } = useStickerContext()
   
   const [formData, setFormData] = useState<ReceiverDetailsFormData>({
+    senderName: "",
+    receiverName: "",
     whatsappNumber: "",
     email: "",
     message: "",
@@ -53,12 +57,20 @@ export function ReceiverDetailsPanel({
   const handleSubmit = () => {
     const newErrors: Partial<ReceiverDetailsFormData> = {}
 
+    // Validate sender name
+    if (!formData.senderName.trim()) {
+      newErrors.senderName = "Please enter your name"
+    }
+
+    // Validate receiver name
+    if (!formData.receiverName.trim()) {
+      newErrors.receiverName = "Please enter receiver's name"
+    }
+
     // At least one contact method required
     if (!formData.whatsappNumber && !formData.email) {
       newErrors.whatsappNumber = "Please provide at least WhatsApp or Email"
       newErrors.email = "Please provide at least WhatsApp or Email"
-      setErrors(newErrors)
-      return
     }
 
     // Validate WhatsApp if provided
@@ -110,6 +122,24 @@ export function ReceiverDetailsPanel({
     setFormData({ ...formData, message: limited })
   }
 
+  const handleSenderNameChange = (value: string) => {
+    setFormData({ ...formData, senderName: value })
+    
+    // Clear error when user starts typing
+    if (errors.senderName) {
+      setErrors({ ...errors, senderName: undefined })
+    }
+  }
+
+  const handleReceiverNameChange = (value: string) => {
+    setFormData({ ...formData, receiverName: value })
+    
+    // Clear error when user starts typing
+    if (errors.receiverName) {
+      setErrors({ ...errors, receiverName: undefined })
+    }
+  }
+
   if (!isOpen) return null
 
   return (
@@ -151,11 +181,51 @@ export function ReceiverDetailsPanel({
             </p>
           </div>
 
+          {/* Sender Name Field */}
+          <div className="space-y-2">
+            <Label htmlFor="senderName" className="flex items-center gap-2 text-sm font-semibold text-charcoal">
+              <User className="w-4 h-4 text-plum-noir" />
+              Your Name
+            </Label>
+            <Input
+              id="senderName"
+              type="text"
+              placeholder="Enter your name"
+              value={formData.senderName}
+              onChange={(e) => handleSenderNameChange(e.target.value)}
+              className={errors.senderName ? "border-destructive focus-visible:ring-destructive/20" : ""}
+              aria-invalid={!!errors.senderName}
+            />
+            {errors.senderName && (
+              <p className="text-xs text-destructive">{errors.senderName}</p>
+            )}
+          </div>
+
+          {/* Receiver Name Field */}
+          <div className="space-y-2">
+            <Label htmlFor="receiverName" className="flex items-center gap-2 text-sm font-semibold text-charcoal">
+              <User className="w-4 h-4 text-persimmon" />
+              Receiver's Name
+            </Label>
+            <Input
+              id="receiverName"
+              type="text"
+              placeholder="Enter receiver's name"
+              value={formData.receiverName}
+              onChange={(e) => handleReceiverNameChange(e.target.value)}
+              className={errors.receiverName ? "border-destructive focus-visible:ring-destructive/20" : ""}
+              aria-invalid={!!errors.receiverName}
+            />
+            {errors.receiverName && (
+              <p className="text-xs text-destructive">{errors.receiverName}</p>
+            )}
+          </div>
+
           {/* WhatsApp Number Field */}
           <div className="space-y-2">
             <Label htmlFor="whatsapp" className="flex items-center gap-2 text-sm font-semibold text-charcoal">
               <Phone className="w-4 h-4 text-eco-green" />
-              WhatsApp Number
+              Receiver's WhatsApp Number
             </Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
@@ -179,11 +249,18 @@ export function ReceiverDetailsPanel({
             </p>
           </div>
 
+          {/* Divider with OR */}
+          <div className="relative flex items-center gap-4">
+            <div className="flex-1 border-t border-border"></div>
+            <span className="text-sm text-muted-foreground font-medium">OR</span>
+            <div className="flex-1 border-t border-border"></div>
+          </div>
+
           {/* Email Field */}
           <div className="space-y-2">
             <Label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold text-charcoal">
               <Mail className="w-4 h-4 text-persimmon" />
-              Email Address
+              Receiver's Email Address
             </Label>
             <Input
               id="email"

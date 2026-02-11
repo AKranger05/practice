@@ -7,9 +7,10 @@ import { History, Sparkles, X } from "lucide-react"
 interface ShopHeaderProps {
   onCartClick: () => void
   onHistoryClick: () => void
+  onMyStickersClick: () => void
 }
 
-export function ShopHeader({ onCartClick, onHistoryClick }: ShopHeaderProps) {
+export function ShopHeader({ onCartClick, onHistoryClick, onMyStickersClick }: ShopHeaderProps) {
   const { getTotalItems } = useStickerContext()
   const totalItems = getTotalItems()
 
@@ -25,6 +26,15 @@ export function ShopHeader({ onCartClick, onHistoryClick }: ShopHeaderProps) {
         </div>
         
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={onMyStickersClick}
+            className="gap-2 border-white/30 hover:bg-white/10 text-white bg-transparent hover:text-white"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span className="text-sm">My Stickers</span>
+          </Button>
+
           <Button
             variant="outline"
             onClick={onHistoryClick}

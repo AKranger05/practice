@@ -2,60 +2,50 @@
 
 import { useStickerContext } from "@/lib/sticker-context"
 import { Button } from "@/components/ui/button"
-import { X, Package, ArrowUpRight, ArrowDownLeft } from "lucide-react"
-import { useMemo } from "react"
+import { X, Sparkles, ArrowUpRight, ArrowDownLeft } from "lucide-react"
 
-interface MyStickersPanelProps {
+interface MyStickersPanel {
   isOpen: boolean
   onClose: () => void
 }
 
-interface StickerStats {
-  stickerId: string
-  name: string
-  emoji: string
-  sent: number
-  received: number
-  total: number
-}
-
-export function MyStickersPanel({ isOpen, onClose }: MyStickersPanelProps) {
+export function MyStickersPanel({ isOpen, onClose }: MyStickersPanel) {
   const { history } = useStickerContext()
 
-  // Calculate sticker statistics
-  const stickerStats = useMemo(() => {
-    const statsMap = new Map<string, StickerStats>()
-
-    history.forEach((item) => {
-      const existing = statsMap.get(item.sticker.id)
-      
-      if (existing) {
-        if (item.type === "sent") {
-          existing.sent += item.quantity
-        } else {
-          existing.received += item.quantity
-        }
-        existing.total = existing.sent + existing.received
-      } else {
-        statsMap.set(item.sticker.id, {
-          stickerId: item.sticker.id,
-          name: item.sticker.name,
-          emoji: item.sticker.emoji,
-          sent: item.type === "sent" ? item.quantity : 0,
-          received: item.type === "received" ? item.quantity : 0,
-          total: item.quantity,
-        })
-      }
-    })
-
-    return Array.from(statsMap.values()).sort((a, b) => b.total - a.total)
-  }, [history])
-
-  const totalStickers = stickerStats.reduce((sum, stat) => sum + stat.total, 0)
-  const totalSent = stickerStats.reduce((sum, stat) => sum + stat.sent, 0)
-  const totalReceived = stickerStats.reduce((sum, stat) => sum + stat.received, 0)
-
   if (!isOpen) return null
+
+  // Calculate totals
+  const sentStickers = history.filter((item) => item.type === "sent")
+  const receivedStickers = history.filter((item) => item.type === "received")
+  const totalStickers = sentStickers.length + receivedStickers.length
+
+  // Group stickers by sticker ID and aggregate data
+  const aggregatedStickers = history.reduce((acc, item) => {
+    const key = item.sticker.id
+    if (!acc[key]) {
+      acc[key] = {
+        sticker: item.sticker,
+        sent: [],
+        received: [],
+      }
+    }
+    if (item.type === "sent") {
+      acc[key].sent.push(item)
+    } else {
+      acc[key].received.push(item)
+    }
+    return acc
+  }, {} as Record<string, { sticker: any; sent: any[]; received: any[] }>)
+
+  const stickerList = Object.values(aggregatedStickers)
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(date)
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -63,7 +53,7 @@ export function MyStickersPanel({ isOpen, onClose }: MyStickersPanelProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-champagne-gold">
           <div className="flex items-center gap-2">
-            <Package className="w-5 h-5 text-plum-noir" />
+            <Sparkles className="w-5 h-5 text-plum-noir" />
             <h2 className="text-xl font-bold text-charcoal">My Stickers</h2>
           </div>
           <Button
@@ -77,85 +67,94 @@ export function MyStickersPanel({ isOpen, onClose }: MyStickersPanelProps) {
           </Button>
         </div>
 
-        {/* Total Summary */}
-        <div className="p-4 bg-plum-noir/5 border-b border-champagne-gold">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-bold text-charcoal">Total Collection</span>
-              <span className="text-2xl font-bold text-plum-noir">{totalStickers}</span>
-            </div>
-            <div className="flex gap-4 text-sm">
-              <div className="flex items-center gap-1 text-persimmon">
+        {/* Total Count */}
+        <div className="p-4 bg-gradient-to-r from-plum-noir to-persimmon text-white">
+          <div className="text-center">
+            <p className="text-sm opacity-90">Total Stickers</p>
+            <p className="text-4xl font-bold mt-1">{totalStickers}</p>
+            <div className="flex justify-center gap-6 mt-4 text-sm">
+              <div className="flex items-center gap-2">
                 <ArrowUpRight className="w-4 h-4" />
-                <span>Sent: {totalSent}</span>
+                <span>{sentStickers.length} Sent</span>
               </div>
-              <div className="flex items-center gap-1 text-eco-green">
+              <div className="flex items-center gap-2">
                 <ArrowDownLeft className="w-4 h-4" />
-                <span>Received: {totalReceived}</span>
+                <span>{receivedStickers.length} Received</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sticker List */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {stickerStats.length === 0 ? (
+        {/* Stickers List */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {stickerList.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <Package className="w-16 h-16 mb-4 opacity-30" />
-              <p className="text-center">No stickers yet</p>
-              <p className="text-sm text-center">Start buying or receiving stickers!</p>
+              <Sparkles className="w-16 h-16 mb-4 opacity-30" />
+              <p>No stickers yet</p>
+              <p className="text-sm">Start sending and receiving stickers!</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {stickerStats.map((stat) => (
-                <div
-                  key={stat.stickerId}
-                  className="bg-muted/50 rounded-xl p-4 border border-border"
-                >
-                  <div className="flex items-start gap-3">
-                    {/* Sticker Emoji */}
-                    <div className="w-12 h-12 flex items-center justify-center bg-card rounded-full text-2xl shadow-sm flex-shrink-0">
-                      {stat.emoji}
-                    </div>
-
-                    {/* Sticker Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-charcoal mb-2">{stat.name}</h3>
-                      
-                      <div className="space-y-1 text-sm">
-                        {/* Sent */}
-                        {stat.sent > 0 && (
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1 text-persimmon">
-                              <ArrowUpRight className="w-3 h-3" />
-                              <span>Sent</span>
-                            </div>
-                            <span className="font-semibold text-persimmon">{stat.sent}</span>
-                          </div>
-                        )}
-
-                        {/* Received */}
-                        {stat.received > 0 && (
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1 text-eco-green">
-                              <ArrowDownLeft className="w-3 h-3" />
-                              <span>Received</span>
-                            </div>
-                            <span className="font-semibold text-eco-green">{stat.received}</span>
-                          </div>
-                        )}
-
-                        {/* Total */}
-                        <div className="flex items-center justify-between pt-1 border-t border-border">
-                          <span className="font-medium text-charcoal">Total</span>
-                          <span className="font-bold text-plum-noir">{stat.total}</span>
-                        </div>
-                      </div>
-                    </div>
+            stickerList.map(({ sticker, sent, received }) => (
+              <div
+                key={sticker.id}
+                className="bg-muted/50 rounded-xl p-4 space-y-3"
+              >
+                {/* Sticker Header */}
+                <div className="flex items-center gap-3 border-b border-border pb-3">
+                  <div className="w-12 h-12 flex items-center justify-center bg-card rounded-full text-2xl shadow-sm">
+                    {sticker.emoji}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-charcoal">{sticker.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {sent.length + received.length} total
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Sent Details */}
+                {sent.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-persimmon">
+                      <ArrowUpRight className="w-3 h-3" />
+                      <span>Sent ({sent.length})</span>
+                    </div>
+                    {sent.map((item) => (
+                      <div
+                        key={item.id}
+                        className="pl-5 text-sm text-muted-foreground"
+                      >
+                        <p>
+                          To: <span className="font-medium text-charcoal">{item.receiverName || "Unknown"}</span>
+                        </p>
+                        <p className="text-xs">{formatDate(item.date)} • {item.quantity}x</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Received Details */}
+                {received.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-eco-green">
+                      <ArrowDownLeft className="w-3 h-3" />
+                      <span>Received ({received.length})</span>
+                    </div>
+                    {received.map((item) => (
+                      <div
+                        key={item.id}
+                        className="pl-5 text-sm text-muted-foreground"
+                      >
+                        <p>
+                          From: <span className="font-medium text-charcoal">{item.senderName || "Unknown"}</span>
+                        </p>
+                        <p className="text-xs">{formatDate(item.date)} • {item.quantity}x</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
           )}
         </div>
       </div>

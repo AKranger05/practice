@@ -17,6 +17,8 @@ export interface HistoryItem {
   quantity: number
   type: "sent" | "received"
   date: Date
+  senderName?: string
+  receiverName?: string
 }
 
 interface StickerContextType {
@@ -45,6 +47,8 @@ const MOCK_HISTORY: HistoryItem[] = [
     quantity: 2,
     type: "sent",
     date: new Date(Date.now() - 86400000 * 2),
+    senderName: "You",
+    receiverName: "Priya Sharma",
   },
   {
     id: "hist-2",
@@ -52,6 +56,8 @@ const MOCK_HISTORY: HistoryItem[] = [
     quantity: 1,
     type: "received",
     date: new Date(Date.now() - 86400000),
+    senderName: "Rahul Verma",
+    receiverName: "You",
   },
   {
     id: "hist-3",
@@ -59,6 +65,8 @@ const MOCK_HISTORY: HistoryItem[] = [
     quantity: 3,
     type: "sent",
     date: new Date(Date.now() - 86400000 * 5),
+    senderName: "You",
+    receiverName: "Amit Kumar",
   },
 ]
 

@@ -9,6 +9,7 @@ import { CartPanel } from "@/components/cart-panel"
 import { ReceiverDetailsPanel } from "@/components/receiver-details-panel"
 import { PaymentPanel } from "@/components/payment-panel"
 import { HistoryPanel } from "@/components/history-panel"
+import { MyStickersPanel } from "@/components/my-stickers-panel"
 import { FloatingCartButton } from "@/components/floating-cart-button"
 import { CheckCircle } from "lucide-react"
 
@@ -16,6 +17,8 @@ type View = "hero" | "wall"
 type CheckoutStep = "cart" | "receiver-details" | "payment"
 
 interface ReceiverDetails {
+  senderName: string
+  receiverName: string
   whatsappNumber: string
   email: string
   message: string
@@ -27,10 +30,11 @@ function StickerShopContent() {
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>("cart")
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [isMyStickersOpen, setIsMyStickersOpen] = useState(false)
   const [showCheckoutSuccess, setShowCheckoutSuccess] = useState(false)
   const [receiverDetails, setReceiverDetails] = useState<ReceiverDetails | null>(null)
   
-  const { checkout } = useStickerContext()
+  const { checkout, addToHistory, cart } = useStickerContext()
 
   const handleCartCheckout = () => {
     // Move from cart to receiver details
@@ -44,6 +48,19 @@ function StickerShopContent() {
   }
 
   const handlePaymentSuccess = () => {
+    // Add items to history with sender/receiver names
+    if (receiverDetails) {
+      for (const item of cart) {
+        addToHistory({
+          sticker: item.sticker,
+          quantity: item.quantity,
+          type: "sent",
+          senderName: receiverDetails.senderName,
+          receiverName: receiverDetails.receiverName,
+        })
+      }
+    }
+    
     // Complete checkout, clear cart, show success
     checkout()
     setCheckoutStep("cart")
@@ -84,6 +101,7 @@ function StickerShopContent() {
       <ShopHeader
         onCartClick={() => setIsCartOpen(true)}
         onHistoryClick={() => setIsHistoryOpen(true)}
+        onMyStickersClick={() => setIsMyStickersOpen(true)}
       />
 
       <main>
@@ -135,6 +153,12 @@ function StickerShopContent() {
       <HistoryPanel
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
+      />
+
+      {/* My Stickers Panel */}
+      <MyStickersPanel
+        isOpen={isMyStickersOpen}
+        onClose={() => setIsMyStickersOpen(false)}
       />
 
       {/* Checkout Success Toast */}

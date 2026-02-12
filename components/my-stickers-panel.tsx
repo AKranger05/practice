@@ -14,10 +14,17 @@ export function MyStickersPanel({ isOpen, onClose }: MyStickersPanel) {
 
   if (!isOpen) return null
 
-  // Calculate totals
-  const sentStickers = history.filter((item) => item.type === "sent")
-  const receivedStickers = history.filter((item) => item.type === "received")
-  const totalStickers = sentStickers.length + receivedStickers.length
+  // Calculate totals by summing quantities (only count entries with valid names)
+  const sentStickers = history.filter((item) => 
+    item.type === "sent" && item.receiverName && item.receiverName !== "Unknown"
+  )
+  const receivedStickers = history.filter((item) => 
+    item.type === "received" && item.senderName && item.senderName !== "Unknown"
+  )
+  
+  const totalSentCount = sentStickers.reduce((sum, item) => sum + item.quantity, 0)
+  const totalReceivedCount = receivedStickers.reduce((sum, item) => sum + item.quantity, 0)
+  const totalStickers = totalSentCount + totalReceivedCount
 
   // Group stickers by sticker ID and aggregate data
   const aggregatedStickers = history.reduce((acc, item) => {
@@ -75,11 +82,11 @@ export function MyStickersPanel({ isOpen, onClose }: MyStickersPanel) {
             <div className="flex justify-center gap-6 mt-4 text-sm">
               <div className="flex items-center gap-2">
                 <ArrowUpRight className="w-4 h-4" />
-                <span>{sentStickers.length} Sent</span>
+                <span>{totalSentCount} Sent</span>
               </div>
               <div className="flex items-center gap-2">
                 <ArrowDownLeft className="w-4 h-4" />
-                <span>{receivedStickers.length} Received</span>
+                <span>{totalReceivedCount} Received</span>
               </div>
             </div>
           </div>
@@ -107,7 +114,7 @@ export function MyStickersPanel({ isOpen, onClose }: MyStickersPanel) {
                   <div className="flex-1">
                     <p className="font-semibold text-charcoal">{sticker.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {sent.length + received.length} total
+                      {sent.reduce((sum, item) => sum + item.quantity, 0) + received.reduce((sum, item) => sum + item.quantity, 0)} total
                     </p>
                   </div>
                 </div>
@@ -117,19 +124,21 @@ export function MyStickersPanel({ isOpen, onClose }: MyStickersPanel) {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm font-medium text-persimmon">
                       <ArrowUpRight className="w-3 h-3" />
-                      <span>Sent ({sent.length})</span>
+                      <span>Sent ({sent.reduce((sum, item) => sum + item.quantity, 0)})</span>
                     </div>
-                    {sent.map((item) => (
-                      <div
-                        key={item.id}
-                        className="pl-5 text-sm text-muted-foreground"
-                      >
-                        <p>
-                          To: <span className="font-medium text-charcoal">{item.receiverName || "Unknown"}</span>
-                        </p>
-                        <p className="text-xs">{formatDate(item.date)} • {item.quantity}x</p>
-                      </div>
-                    ))}
+                    {sent
+                      .filter((item) => item.receiverName && item.receiverName !== "Unknown")
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="pl-5 text-sm text-muted-foreground"
+                        >
+                          <p>
+                            To: <span className="font-medium text-charcoal">{item.receiverName}</span>
+                          </p>
+                          <p className="text-xs">{formatDate(item.date)} • {item.quantity}x</p>
+                        </div>
+                      ))}
                   </div>
                 )}
 
@@ -138,19 +147,21 @@ export function MyStickersPanel({ isOpen, onClose }: MyStickersPanel) {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm font-medium text-eco-green">
                       <ArrowDownLeft className="w-3 h-3" />
-                      <span>Received ({received.length})</span>
+                      <span>Received ({received.reduce((sum, item) => sum + item.quantity, 0)})</span>
                     </div>
-                    {received.map((item) => (
-                      <div
-                        key={item.id}
-                        className="pl-5 text-sm text-muted-foreground"
-                      >
-                        <p>
-                          From: <span className="font-medium text-charcoal">{item.senderName || "Unknown"}</span>
-                        </p>
-                        <p className="text-xs">{formatDate(item.date)} • {item.quantity}x</p>
-                      </div>
-                    ))}
+                    {received
+                      .filter((item) => item.senderName && item.senderName !== "Unknown")
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="pl-5 text-sm text-muted-foreground"
+                        >
+                          <p>
+                            From: <span className="font-medium text-charcoal">{item.senderName}</span>
+                          </p>
+                          <p className="text-xs">{formatDate(item.date)} • {item.quantity}x</p>
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>

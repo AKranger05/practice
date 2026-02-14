@@ -4,7 +4,6 @@ import { useStickerContext } from "@/lib/sticker-context"
 import type { Sticker } from "@/lib/sticker-data"
 import { Minus, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import Image from "next/image"
 
 interface StickerItemProps {
   sticker: Sticker
@@ -55,11 +54,10 @@ export function StickerItem({ sticker, size = "md", showQuantityBadge = false }:
         aria-label={`Select ${sticker.name} sticker`}
       >
         {sticker.image ? (
-          <Image
+          <img
             src={sticker.image || "/placeholder.svg"}
             alt={sticker.name}
-            fill
-            className="object-cover"
+            className="w-full h-full object-cover"
           />
         ) : (
           <span className="select-none">{sticker.emoji}</span>
